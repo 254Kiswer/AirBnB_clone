@@ -1,66 +1,95 @@
 #!/usr/bin/python3
-"""file_storage module containing file_storage class """
+"""Module for FileStorage class."""
+import datetime
+import json
 import os
 
 
 class FileStorage:
-    """
-    FileStorage class: contains methods to serialize objects to JSON
-    and to deserialize JSON files to objects
-    """
-    __file_path = 'file.json'
+
+    """Class for storing and retrieving data"""
+    __file_path = "file.json"
     __objects = {}
 
     def all(self):
-        """
-        Returns __objects dictionary
-        """
-        return type(self).__objects
+        """returns the dictionary __objects"""
+        return FileStorage.__objects
 
     def new(self, obj):
-        """
-        Sets obj value in __objects dict with key <obj class name>.id
-        """
-        objects_value = obj
-        objects_key = "{}.{}".format(obj.__class__.__name__, obj.id)
-        type(self).__objects[objects_key] = objects_value
+        """sets in __objects the obj with key <obj class name>.id"""
+        key = "{}.{}".format(type(obj).__name__, obj.id)
+        FileStorage.__objects[key] = obj
 
     def save(self):
-        """
-        Serializes __objects dict to JSON.
-        Writes File to __file_path.
-        """
-        from json import dump as jdu
-        from models.base_model import BaseModel
+        """ serializes __objects to the JSON file (path: __file_path)"""
+        with open(FileStorage.__file_path, "w", encoding="utf-8") as f:
+            d = {k: v.to_dict() for k, v in FileStorage.__objects.items()}
+            json.dump(d, f)
 
-        dict_to_serial = type(self).__objects.copy()
-        with open(type(self).__file_path, "w+") as File:
-            for key, value in dict_to_serial.items():
-                value_as_dict = value.to_dict()
-                dict_to_serial[key] = value_as_dict
-            jdu(dict_to_serial, File)
-
-    def reload(self):
-        """
-        If the JSON file exists, deserializes it.
-        Opens file in read-only mode.
-        Converts the string reps back to objects.
-        """
-        from json import load as jlo
+    def classes(self):
+        """Returns a dictionary of valid classes and their references"""
         from models.base_model import BaseModel
-        from models.amenity import Amenity
+        from models.user import User
+        from models.state import State
         from models.city import City
+        from models.amenity import Amenity
         from models.place import Place
         from models.review import Review
-        from models.state import State
-        from models.user import User
 
-        new_dict = {}
-        cl = {"Amenity": Amenity, "BaseModel": BaseModel, "City": City,
-              "Place": Place, "Review": Review, "State": State, "User": User}
-        if os.path.isfile(type(self).__file_path) is True:
-            with open(type(self).__file_path, 'r') as File:
-                nd = jlo(File)
-            for key in nd:
-                type(self).__objects[key] = cl[nd[key]["__class__"]](**nd[key])
+        classes = {"BaseModel": BaseModel,
+                   "User": User,
+                   "State": State,
+                   "City": City,
+                   "Amenity": Amenity,
+                   "Place": Place,
+                   "Review": Review}
+        return classes
 
+    def reload(self):
+        """Reloads the stored objects"""
+        if not os.path.isfile(FileStorage.__file_path):
+            return
+        with open(FileStorage.__file_path, "r", encoding="utf-8") as f:
+            obj_dict = json.load(f)
+            obj_dict = {k: self.classes()[v["__class__"]](**v)
+                        for k, v in obj_dict.items()}
+            # TODO: should this overwrite or insert?
+            FileStorage.__objects = obj_dict
+
+    def attributes(self):
+        """Returns the valid attributes and their types for classname"""
+        attributes = {
+            "BaseModel":
+                     {"id": str,
+                      "created_at": datetime.datetime,
+                      "updated_at": datetime.datetime},
+            "User":
+                     {"email": str,
+                      "password": str,
+                      "first_name": str,
+                      "last_name": str},
+            "State":
+                     {"name": str},
+            "City":
+                     {"state_id": str,
+                      "name": str},
+            "Amenity":
+                     {"name": str},
+            "Place":
+                     {"city_id": str,
+                      "user_id": str,
+                      "name": str,
+                      "description": str,
+                      "number_rooms": int,
+                      "number_bathrooms": int,
+                      "max_guest": int,
+                      "price_by_night": int,
+                      "latitude": float,
+                      "longitude": float,
+                      "amenity_ids": list},
+            "Review":
+            {"place_id": str,
+                         "user_id": str,
+                         "text": str}
+        }
+        return attributes

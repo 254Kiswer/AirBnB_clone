@@ -1,21 +1,11 @@
 #!/usr/bin/python3
-"""
-Class City, inherts from BaseModel
-"""
+"""This module creates a User class"""
+
 from models.base_model import BaseModel
 
 
 class City(BaseModel):
-    """
-    Public attributes which
-    can be accessed in subsequent methods
-    """
+    """Class for managing city objects"""
+
     state_id = ""
     name = ""
-
-    def __init__(self, *args, **kwargs):
-        """
-        Initiates class City to accept arguments
-        """
-        super().__init__(*args, **kwargs)
-
