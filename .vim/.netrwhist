@@ -1,5 +1,0 @@
-let g:netrw_dirhistmax  =10
-let g:netrw_dirhistcnt =3
-let g:netrw_dirhist_3='/root/printf/printf'
-let g:netrw_dirhist_2='/root/staticTests/0x09-static_libraries'
-let g:netrw_dirhist_1='/alx-zero_day/bash'
